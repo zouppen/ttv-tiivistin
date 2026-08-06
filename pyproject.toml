@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teletext-hyphenate"
+version = "0.1.0"
+description = "Finnish teletext-aware monospace text wrapper with Voikko hyphenation"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["libvoikko>=4.3"]
+
+[project.scripts]
+teletext-hyphenate = "teletext_hyphenate.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
