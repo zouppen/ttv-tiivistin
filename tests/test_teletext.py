@@ -48,7 +48,7 @@ def test_build_ep1_page_adds_header_layout_and_fixed_size():
 
     assert len(output) == EP1_PAGE_SIZE
     assert output[-2:] == b"\x00\x00"
-    assert rows == 6
+    assert rows == 3
     assert output.startswith(EP1_HEADER)
     assert output[8:48] == b" " * EP1_WIDTH
     assert output[48:88] == b" " * 33 + b"10/23\x04\x1d"

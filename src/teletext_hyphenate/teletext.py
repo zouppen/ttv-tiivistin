@@ -67,7 +67,7 @@ def build_ep1_page(
         + (b" " * EP1_COLORED_SECTION_GUTTER)
         + encode_ep1_rows(colored_rows, EP1_WIDTH)
     )
-    return _fit_ep1_page(unpadded), len(rows) + len(colored_rows)
+    return _fit_ep1_page(unpadded), len(colored_rows)
 
 
 def _encode_char(char: str, row_number: int, column: int) -> int:

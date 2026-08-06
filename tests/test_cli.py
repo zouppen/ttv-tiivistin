@@ -100,7 +100,7 @@ def test_cli_ep1_verbose_reports_row_count(monkeypatch, tmp_path, capsys):
     assert cli.main(["--format", "ep1", "-v", "-i", str(input_path), "-o", str(output_path)]) == 0
 
     captured = capsys.readouterr()
-    assert captured.err == "teletext-hyphenate: rows=6\n"
+    assert captured.err == "teletext-hyphenate: rows=3\n"
     assert len(output_path.read_bytes()) == 1008
 
 
