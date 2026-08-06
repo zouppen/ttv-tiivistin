@@ -114,6 +114,26 @@ def test_cli_ep1_encoding_error_exit_code(monkeypatch, capsys):
     assert "not supported" in captured.err
 
 
+def test_cli_ep1_too_long_page_header_exit_code(monkeypatch, capsys):
+    monkeypatch.setattr(cli.VoikkoHyphenator, "create", lambda: FakeHyphenator())
+    monkeypatch.setattr(cli.sys.stdin, "read", lambda: "otsikko")
+
+    assert cli.main(["--format", "ep1", "--page-header", "H" * 41]) == cli.EXIT_TELETEXT_ENCODING
+
+    captured = capsys.readouterr()
+    assert "--page-header" in captured.err
+
+
+def test_cli_ep1_too_long_page_name_exit_code(monkeypatch, capsys):
+    monkeypatch.setattr(cli.VoikkoHyphenator, "create", lambda: FakeHyphenator())
+    monkeypatch.setattr(cli.sys.stdin, "read", lambda: "otsikko")
+
+    assert cli.main(["--format", "ep1", "--page-name", "N" * 38]) == cli.EXIT_TELETEXT_ENCODING
+
+    captured = capsys.readouterr()
+    assert "--page-name" in captured.err
+
+
 def test_cli_voikko_unavailable_exit_code(monkeypatch, capsys):
     def raise_unavailable():
         raise VoikkoUnavailableError("missing")

@@ -3,7 +3,11 @@ from pathlib import Path
 import pytest
 
 from teletext_hyphenate.teletext import (
+    EP1_FOOTER,
     EP1_HEADER,
+    EP1_PAGE_HEADER_MAX_LENGTH,
+    EP1_PAGE_NAME_MAX_LENGTH,
+    EP1_PAGE_NAME_PREFIX,
     EP1_PAGE_SIZE,
     EP1_WIDTH,
     TeletextEncodingError,
@@ -47,13 +51,15 @@ def test_build_ep1_page_adds_header_layout_and_fixed_size():
     )
 
     assert len(output) == EP1_PAGE_SIZE
-    assert output[-2:] == b"\x00\x00"
+    assert output[-2:] == EP1_FOOTER
     assert rows == 3
     assert output.startswith(EP1_HEADER)
-    assert output[8:48] == b" " * EP1_WIDTH
-    assert output[48:88] == b" " * 33 + b"10/23\x04\x1d"
-    assert output[88] == 0x07
-    assert output[126:168] == b" " * 40 + b"\x02O"
+    page_rows = _page_rows(output)
+    assert page_rows[0] == b" " * EP1_WIDTH
+    assert page_rows[1] == b" " * 35 + b"10/23"
+    assert page_rows[2].startswith(b"\x04\x1d\x07Radioamat")
+    assert page_rows[3] == b" " * EP1_WIDTH
+    assert page_rows[4].startswith(b"\x02O")
     assert b"\x07Leip{" in output
 
 
@@ -62,8 +68,39 @@ def test_target_fixture_has_expected_page_shape():
 
     assert len(fixture) == EP1_PAGE_SIZE
     assert fixture.startswith(EP1_HEADER)
-    assert fixture[8:48] == b" " * EP1_WIDTH
-    assert fixture[48:88] == b" " * 33 + b"10/23\x04\x1d"
-    assert fixture[88] == 0x07
-    assert fixture[166] == 0x02
-    assert fixture[246] == 0x07
+    assert fixture[-2:] == EP1_FOOTER
+    page_rows = _page_rows(fixture)
+    assert len(page_rows) == 25
+    assert page_rows[0] == b" " * EP1_WIDTH
+    assert page_rows[1] == b" " * 35 + b"10/23"
+    assert page_rows[2].startswith(b"\x04\x1d\x07Radioamat")
+    assert page_rows[4].startswith(b"\x02")
+    assert page_rows[6].startswith(b"\x07")
+
+
+def test_build_ep1_page_accepts_max_length_metadata():
+    output, _ = build_ep1_page(
+        title_rows=[],
+        body_rows=[],
+        page_header="H" * EP1_PAGE_HEADER_MAX_LENGTH,
+        page_name="N" * EP1_PAGE_NAME_MAX_LENGTH,
+    )
+
+    page_rows = _page_rows(output)
+    assert page_rows[1] == b"H" * EP1_PAGE_HEADER_MAX_LENGTH
+    assert page_rows[2] == EP1_PAGE_NAME_PREFIX.encode("ascii") + (b"N" * EP1_PAGE_NAME_MAX_LENGTH)
+
+
+def test_build_ep1_page_rejects_too_long_page_header():
+    with pytest.raises(TeletextEncodingError, match="--page-header"):
+        build_ep1_page(title_rows=[], body_rows=[], page_header="H" * 41, page_name="")
+
+
+def test_build_ep1_page_rejects_too_long_page_name():
+    with pytest.raises(TeletextEncodingError, match="--page-name"):
+        build_ep1_page(title_rows=[], body_rows=[], page_header="", page_name="N" * 38)
+
+
+def _page_rows(output: bytes) -> list[bytes]:
+    page = output[len(EP1_HEADER) : -len(EP1_FOOTER)]
+    return [page[index : index + EP1_WIDTH] for index in range(0, len(page), EP1_WIDTH)]

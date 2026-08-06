@@ -6,12 +6,15 @@ class TeletextEncodingError(ValueError):
 
 
 EP1_WIDTH = 40
+EP1_ROWS = 25
 EP1_PAGE_SIZE = 1008
-EP1_HEADER = b"\xfe\x01\x18\x00\x00\x00  "
-EP1_HEADER_TRAILER = "\x04\x1d"
+EP1_HEADER = b"\xfe\x01\x18\x00\x00\x00"
+EP1_FOOTER = b"\x00\x00"
 EP1_GREEN = "\x02"
 EP1_WHITE = "\x07"
-EP1_COLORED_SECTION_GUTTER = 38
+EP1_PAGE_NAME_PREFIX = "\x04\x1d" + EP1_WHITE
+EP1_PAGE_HEADER_MAX_LENGTH = 40
+EP1_PAGE_NAME_MAX_LENGTH = EP1_WIDTH - len(EP1_PAGE_NAME_PREFIX)
 
 NATIONAL_CHARS = {
     "#": 0x23,
@@ -55,19 +58,16 @@ def build_ep1_page(
     page_header: str,
     page_name: str,
 ) -> tuple[bytes, int]:
+    _validate_ep1_metadata(page_header=page_header, page_name=page_name)
     rows = [
         " " * EP1_WIDTH,
-        (page_header + EP1_HEADER_TRAILER).rjust(EP1_WIDTH),
-        EP1_WHITE + page_name,
+        page_header.rjust(EP1_WIDTH),
+        EP1_PAGE_NAME_PREFIX + page_name,
+        " " * EP1_WIDTH,
     ]
     colored_rows = [_strip_initial_carry(row) for row in title_rows + body_rows]
-    unpadded = (
-        EP1_HEADER
-        + encode_ep1_rows(rows, EP1_WIDTH)
-        + (b" " * EP1_COLORED_SECTION_GUTTER)
-        + encode_ep1_rows(colored_rows, EP1_WIDTH)
-    )
-    return _fit_ep1_page(unpadded), len(colored_rows)
+    page_rows = _fit_ep1_rows(rows + colored_rows)
+    return EP1_HEADER + encode_ep1_rows(page_rows, EP1_WIDTH) + EP1_FOOTER, len(colored_rows)
 
 
 def _encode_char(char: str, row_number: int, column: int) -> int:
@@ -83,12 +83,19 @@ def _encode_char(char: str, row_number: int, column: int) -> int:
     )
 
 
-def _fit_ep1_page(data: bytes) -> bytes:
-    if len(data) >= EP1_PAGE_SIZE:
-        return data[:EP1_PAGE_SIZE]
-    padded = bytearray(data + (b" " * (EP1_PAGE_SIZE - len(data))))
-    padded[-2:] = b"\x00\x00"
-    return bytes(padded)
+def _fit_ep1_rows(rows: list[str]) -> list[str]:
+    if len(rows) >= EP1_ROWS:
+        return rows[:EP1_ROWS]
+    return rows + ([" " * EP1_WIDTH] * (EP1_ROWS - len(rows)))
+
+
+def _validate_ep1_metadata(*, page_header: str, page_name: str) -> None:
+    if len(page_header) > EP1_PAGE_HEADER_MAX_LENGTH:
+        raise TeletextEncodingError(
+            f"--page-header is too long; maximum is {EP1_PAGE_HEADER_MAX_LENGTH} characters"
+        )
+    if len(page_name) > EP1_PAGE_NAME_MAX_LENGTH:
+        raise TeletextEncodingError(f"--page-name is too long; maximum is {EP1_PAGE_NAME_MAX_LENGTH} characters")
 
 
 def _strip_initial_carry(row: str) -> str:
