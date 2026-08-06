@@ -1,0 +1,5 @@
+Kempeleen häiriön syy muualla vaikka kaikki on vinksin vonksin.
+
+SRAL:n mukaan Kempeleessä havaitut autojen kauko-ohjattavien keskuslukitusten häiriöt eivät johtuneet radioamatöörien toistinasemasta tai muusta radioamatöörilähettimestä. Traficomtairadioamatöörit ovat selvittäneethommaterikseen.
+
+Autonavaimet käyttävät 433 MHz:n yhteiskäyttöaluetta, jolla toimii myös muita luvasta vapautettuja pienlaitteita. Niiden on siedettävä muuta radioliikennettä, eikä niillä ole suojaa kaikiltahäiriöiltä.

@@ -53,6 +53,10 @@ class Wrapper:
 
     def _add_control(self, char: str) -> None:
         self._ensure_room()
+        if self._line and is_c0_control(self._line[-1]):
+            self._line = self._line[:-1] + char
+            self._carry = char
+            return
         self._line += char
         self._carry = char
 

@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pytest
+
 from teletext_hyphenate import cli
 from teletext_hyphenate.voikko import VoikkoUnavailableError
 
@@ -171,3 +175,23 @@ def test_cli_ep1_rejects_width():
         assert exc.code == cli.EXIT_USAGE
     else:
         raise AssertionError("expected argparse to exit")
+
+
+def test_cli_ep1_multicolor_fixture_matches_manual_fix(tmp_path):
+    try:
+        import libvoikko  # noqa: F401
+    except Exception:
+        pytest.skip("libvoikko is not available")
+
+    output_path = tmp_path / "output.ep1"
+
+    assert cli.main(["--format", "ep1", "-i", "examples/input-multicolor.txt", "-o", str(output_path)]) == 0
+
+    expected = Path("examples/output-multicolor-manual-fix.ep1").read_bytes()
+    actual = output_path.read_bytes()
+    assert actual == expected
+
+    rows = [actual[6 + index * 40 : 6 + (index + 1) * 40] for index in range(25)]
+    assert rows[7].startswith(b"\x06SRAL:n")
+    assert rows[12].startswith(b"\x07radioamat")
+    assert b"hommat" in rows[12]

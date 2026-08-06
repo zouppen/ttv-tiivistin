@@ -67,6 +67,33 @@ def test_preserves_controls_and_carries_latest_control_to_next_rows():
     assert result.splitlines() == [f" aa{red}bb", f"{red}cc{green}dd", f"{green}ee"]
 
 
+def test_adjacent_controls_collapse_to_latter_control():
+    blue = "\x04"
+    white = "\x07"
+
+    result = wrap_text(f"{blue}{white}teksti", width=10, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" {white}teksti"]
+
+
+def test_carried_control_followed_by_control_collapses_to_latter_control():
+    blue = "\x04"
+    white = "\x07"
+
+    result = wrap_text(f"pitkasana{blue}{white}jatko", width=10, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [" pitkasana", f" {white}jatko"]
+
+
+def test_controls_separated_by_text_are_preserved():
+    blue = "\x04"
+    white = "\x07"
+
+    result = wrap_text(f"{blue}tai{white}radio", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" {blue}tai{white}radio"]
+
+
 def test_control_at_full_row_moves_to_next_row_and_then_carries():
     red = "\x01"
 
