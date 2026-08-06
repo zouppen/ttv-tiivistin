@@ -29,6 +29,28 @@ def test_uses_hyphenation_point_when_word_does_not_fit():
     assert result.splitlines() == [" talon-", " poikai-", " nen"]
 
 
+def test_hyphenates_word_onto_partially_filled_row():
+    result = wrap_text(
+        "alku talonpoikainen",
+        width=14,
+        max_rows=5,
+        hyphenator=FakeHyphenator({"talonpoikainen": [2, 5, 9]}),
+    )
+
+    assert result.splitlines() == [" alku talon-", " poikainen"]
+
+
+def test_moves_word_when_no_hyphenation_point_fits_current_row():
+    result = wrap_text(
+        "alku talonpoikainen",
+        width=10,
+        max_rows=5,
+        hyphenator=FakeHyphenator({"talonpoikainen": [9]}),
+    )
+
+    assert result.splitlines() == [" alku", " talonpoi-", " kainen"]
+
+
 def test_hard_splits_when_no_hyphenation_point_fits():
     result = wrap_text("abcdefgh", width=5, max_rows=5, hyphenator=FakeHyphenator())
 
@@ -56,6 +78,20 @@ def test_forced_newline_flushes_current_row():
     result = wrap_text("eka\ntoka", width=10, max_rows=5, hyphenator=FakeHyphenator())
 
     assert result.splitlines() == [" eka", " toka"]
+
+
+def test_forced_blank_line_preserves_first_column_space():
+    result = wrap_text("eka\n\ntoka", width=10, max_rows=5, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [" eka", " ", " toka"]
+
+
+def test_forced_blank_line_preserves_first_column_control():
+    red = "\x01"
+
+    result = wrap_text(f"eka{red}\n\ntoka", width=10, max_rows=5, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" eka{red}", red, f"{red}toka"]
 
 
 def test_max_rows_exceeded_raises_with_truncated_output():

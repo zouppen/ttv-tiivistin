@@ -55,7 +55,7 @@ class Wrapper:
     def _flush(self) -> None:
         if len(self._rows) >= self.max_rows:
             raise TextTooLongError("\n".join(self._rows))
-        self._rows.append(self._line.rstrip(" "))
+        self._rows.append(self._line.rstrip(" ") or self._carry)
         self._line = self._carry
 
     def _ensure_room(self, cells: int = 1) -> None:
@@ -80,15 +80,15 @@ class Wrapper:
                 self._line += word
                 return
 
-            if len(self._line) > 1:
-                self._flush()
-                continue
-
             if self._remaining < 2:
                 self._flush()
                 continue
 
             split_at = self._best_hyphenation_point(word, self._remaining)
+            if split_at is None and len(self._line) > 1:
+                self._flush()
+                continue
+
             if split_at is None:
                 split_at = self._remaining - 1
 
