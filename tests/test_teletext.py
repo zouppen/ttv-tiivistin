@@ -1,6 +1,15 @@
+from pathlib import Path
+
 import pytest
 
-from teletext_hyphenate.teletext import TeletextEncodingError, encode_ep1_rows
+from teletext_hyphenate.teletext import (
+    EP1_HEADER,
+    EP1_PAGE_SIZE,
+    EP1_WIDTH,
+    TeletextEncodingError,
+    build_ep1_page,
+    encode_ep1_rows,
+)
 
 
 def test_encode_ep1_rows_pads_to_fixed_width_without_newlines():
@@ -27,3 +36,34 @@ def test_encode_ep1_rows_rejects_unsupported_character():
 def test_encode_ep1_rows_rejects_too_wide_row():
     with pytest.raises(TeletextEncodingError, match="exceeds width"):
         encode_ep1_rows([" abc"], width=3)
+
+
+def test_build_ep1_page_adds_header_layout_and_fixed_size():
+    output, rows = build_ep1_page(
+        title_rows=[" \x02Otsikko", "\x02"],
+        body_rows=[" \x07Leipäteksti"],
+        page_header="10/23",
+        page_name="Radioamatööriliiton tiedote 6.8.2026",
+    )
+
+    assert len(output) == EP1_PAGE_SIZE
+    assert output[-2:] == b"\x00\x00"
+    assert rows == 6
+    assert output.startswith(EP1_HEADER)
+    assert output[8:48] == b" " * EP1_WIDTH
+    assert output[48:88] == b" " * 33 + b"10/23\x04\x1d"
+    assert output[88] == 0x07
+    assert output[126:168] == b" " * 40 + b"\x02O"
+    assert b"\x07Leip{" in output
+
+
+def test_target_fixture_has_expected_page_shape():
+    fixture = Path("examples/tavoite.ep1").read_bytes()
+
+    assert len(fixture) == EP1_PAGE_SIZE
+    assert fixture.startswith(EP1_HEADER)
+    assert fixture[8:48] == b" " * EP1_WIDTH
+    assert fixture[48:88] == b" " * 33 + b"10/23\x04\x1d"
+    assert fixture[88] == 0x07
+    assert fixture[166] == 0x02
+    assert fixture[246] == 0x07

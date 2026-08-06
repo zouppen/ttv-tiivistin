@@ -66,26 +66,29 @@ def test_cli_ep1_writes_binary_stdout(monkeypatch, capsys):
     monkeypatch.setattr(cli.sys.stdin, "read", lambda: "hei")
     monkeypatch.setattr(cli.sys, "stdout", stdout)
 
-    assert cli.main(["--width", "5", "--format", "ep1"]) == 0
+    assert cli.main(["--format", "ep1"]) == 0
 
     captured = capsys.readouterr()
     assert stdout.text == ""
-    assert stdout.buffer.data == b" hei "
+    assert len(stdout.buffer.data) == 1008
+    assert stdout.buffer.data.startswith(b"\xfe\x01\x18\x00\x00\x00  ")
+    assert b"\x02hei" in stdout.buffer.data
     assert captured.err == ""
 
 
 def test_cli_ep1_reads_and_writes_files(monkeypatch, tmp_path, capsys):
     input_path = tmp_path / "input.txt"
     output_path = tmp_path / "output.ep1"
-    input_path.write_text("ää", encoding="utf-8")
+    input_path.write_text("otsikko\n\nää", encoding="utf-8")
     monkeypatch.setattr(cli.VoikkoHyphenator, "create", lambda: FakeHyphenator())
 
-    assert cli.main(["--width", "4", "--format", "ep1", "-i", str(input_path), "-o", str(output_path)]) == 0
+    assert cli.main(["--format", "ep1", "-i", str(input_path), "-o", str(output_path)]) == 0
 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    assert output_path.read_bytes() == bytes([0x20, 0x7B, 0x7B, 0x20])
+    assert len(output_path.read_bytes()) == 1008
+    assert bytes([0x07, 0x7B, 0x7B]) in output_path.read_bytes()
 
 
 def test_cli_ep1_verbose_reports_row_count(monkeypatch, tmp_path, capsys):
@@ -94,18 +97,18 @@ def test_cli_ep1_verbose_reports_row_count(monkeypatch, tmp_path, capsys):
     input_path.write_text("aa bb cc", encoding="utf-8")
     monkeypatch.setattr(cli.VoikkoHyphenator, "create", lambda: FakeHyphenator())
 
-    assert cli.main(["--width", "5", "--format", "ep1", "-v", "-i", str(input_path), "-o", str(output_path)]) == 0
+    assert cli.main(["--format", "ep1", "-v", "-i", str(input_path), "-o", str(output_path)]) == 0
 
     captured = capsys.readouterr()
-    assert captured.err == "teletext-hyphenate: rows=3\n"
-    assert len(output_path.read_bytes()) == 15
+    assert captured.err == "teletext-hyphenate: rows=6\n"
+    assert len(output_path.read_bytes()) == 1008
 
 
 def test_cli_ep1_encoding_error_exit_code(monkeypatch, capsys):
     monkeypatch.setattr(cli.VoikkoHyphenator, "create", lambda: FakeHyphenator())
     monkeypatch.setattr(cli.sys.stdin, "read", lambda: "€")
 
-    assert cli.main(["--width", "5", "--format", "ep1"]) == cli.EXIT_TELETEXT_ENCODING
+    assert cli.main(["--format", "ep1"]) == cli.EXIT_TELETEXT_ENCODING
 
     captured = capsys.readouterr()
     assert "not supported" in captured.err
@@ -126,6 +129,24 @@ def test_cli_voikko_unavailable_exit_code(monkeypatch, capsys):
 def test_cli_invalid_width_uses_argparse_exit_code():
     try:
         cli.main(["--width", "1"])
+    except SystemExit as exc:
+        assert exc.code == cli.EXIT_USAGE
+    else:
+        raise AssertionError("expected argparse to exit")
+
+
+def test_cli_text_requires_width():
+    try:
+        cli.main([])
+    except SystemExit as exc:
+        assert exc.code == cli.EXIT_USAGE
+    else:
+        raise AssertionError("expected argparse to exit")
+
+
+def test_cli_ep1_rejects_width():
+    try:
+        cli.main(["--format", "ep1", "--width", "40"])
     except SystemExit as exc:
         assert exc.code == cli.EXIT_USAGE
     else:

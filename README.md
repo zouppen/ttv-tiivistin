@@ -25,10 +25,15 @@ teletext-hyphenate --width 40 --verbose < input.txt > output.txt
 
 Use `--format ep1` to write fixed-width teletext bytes instead of UTF-8 text.
 EP1 output has no newline separators; every row is padded with spaces to exactly
-`--width` bytes.
+40 bytes.
 
 ```sh
-teletext-hyphenate --width 40 --format ep1 --input input.txt --output output.ep1
+teletext-hyphenate \
+  --format ep1 \
+  --page-header 10/23 \
+  --page-name "Radioamatööriliiton tiedote 6.8.2026" \
+  --input input.txt \
+  --output output.ep1
 ```
 
 Rows reserve their first column for the latest C0 control character seen in the
@@ -36,8 +41,10 @@ input, or a regular space before any control character has been seen. C0 control
 characters are preserved in the output and treated as whitespace for
 hyphenation.
 
-EP1 output uses the Teletext Latin G0 Swedish/Finnish/Hungarian national
-character subset. Input is still UTF-8.
+EP1 output always uses 40-byte rows and produces exactly 1008 bytes, padding or
+truncating the generated page as needed. Do not pass `--width` with
+`--format ep1`. EP1 output uses the Teletext Latin G0 Swedish/Finnish/Hungarian
+national character subset. Input is still UTF-8.
 
 Exit codes:
 

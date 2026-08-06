@@ -1,0 +1,7 @@
+Kempeleen häiriön syy muualla
+
+SRAL:n mukaan Kempeleessä havaitut autojen kauko-ohjattavien keskuslukitusten häiriöt eivät johtuneet radioamatöörien toistinasemasta tai muusta radioamatöörilähettimestä. Traficom ja radioamatöörit selvittivät asian yhdessä.
+
+Autonavaimet käyttävät 433 MHz:n yhteiskäyttöaluetta, jolla toimii myös muita luvasta vapautettuja pienlaitteita. Niiden on siedettävä muuta radioliikennettä, eikä niillä ole suojaa kaikilta häiriöiltä.
+
+Radioamatööritoiminta on luvanvaraista ja valvottua. SRAL kiittää Traficomia yhteistyöstä.

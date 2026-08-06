@@ -5,6 +5,14 @@ class TeletextEncodingError(ValueError):
     """Raised when text cannot be represented in the target teletext charset."""
 
 
+EP1_WIDTH = 40
+EP1_PAGE_SIZE = 1008
+EP1_HEADER = b"\xfe\x01\x18\x00\x00\x00  "
+EP1_HEADER_TRAILER = "\x04\x1d"
+EP1_GREEN = "\x02"
+EP1_WHITE = "\x07"
+EP1_COLORED_SECTION_GUTTER = 38
+
 NATIONAL_CHARS = {
     "#": 0x23,
     "¤": 0x24,
@@ -40,6 +48,28 @@ def encode_ep1_rows(rows: list[str], width: int) -> bytes:
     return bytes(encoded)
 
 
+def build_ep1_page(
+    *,
+    title_rows: list[str],
+    body_rows: list[str],
+    page_header: str,
+    page_name: str,
+) -> tuple[bytes, int]:
+    rows = [
+        " " * EP1_WIDTH,
+        (page_header + EP1_HEADER_TRAILER).rjust(EP1_WIDTH),
+        EP1_WHITE + page_name,
+    ]
+    colored_rows = [_strip_initial_carry(row) for row in title_rows + body_rows]
+    unpadded = (
+        EP1_HEADER
+        + encode_ep1_rows(rows, EP1_WIDTH)
+        + (b" " * EP1_COLORED_SECTION_GUTTER)
+        + encode_ep1_rows(colored_rows, EP1_WIDTH)
+    )
+    return _fit_ep1_page(unpadded), len(rows) + len(colored_rows)
+
+
 def _encode_char(char: str, row_number: int, column: int) -> int:
     codepoint = ord(char)
     if codepoint < 0x20:
@@ -51,3 +81,17 @@ def _encode_char(char: str, row_number: int, column: int) -> int:
     raise TeletextEncodingError(
         f"character {char!r} at row {row_number}, column {column} is not supported by the teletext charset"
     )
+
+
+def _fit_ep1_page(data: bytes) -> bytes:
+    if len(data) >= EP1_PAGE_SIZE:
+        return data[:EP1_PAGE_SIZE]
+    padded = bytearray(data + (b" " * (EP1_PAGE_SIZE - len(data))))
+    padded[-2:] = b"\x00\x00"
+    return bytes(padded)
+
+
+def _strip_initial_carry(row: str) -> str:
+    if row.startswith(" "):
+        return row[1:]
+    return row
