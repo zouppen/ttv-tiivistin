@@ -3,10 +3,22 @@
 Finnish teletext-aware text wrapping for monospace output.
 
 The command reads UTF-8 text from standard input and writes wrapped text to
-standard output:
+standard output by default:
 
 ```sh
-teletext-hyphenate --width 40 --max-rows 10 < input.txt > output.txt
+teletext-hyphenate --width 40 < input.txt > output.txt
+```
+
+Input and output files can also be supplied explicitly:
+
+```sh
+teletext-hyphenate --width 40 --input input.txt --output output.txt
+```
+
+Use `--verbose` or `-v` to report the number of output rows to standard error.
+
+```sh
+teletext-hyphenate --width 40 --verbose < input.txt > output.txt
 ```
 
 Rows reserve their first column for the latest C0 control character seen in the
@@ -20,4 +32,3 @@ Exit codes:
 - `1`: unexpected runtime error
 - `2`: command-line usage error
 - `3`: Voikko is unavailable or no Finnish dictionary can be opened
-- `4`: output was truncated because `--max-rows` was exceeded

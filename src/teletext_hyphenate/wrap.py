@@ -9,23 +9,14 @@ class Hyphenator(Protocol):
         """Return positions where the word may be split with an inserted hyphen."""
 
 
-class TextTooLongError(RuntimeError):
-    def __init__(self, output: str) -> None:
-        super().__init__("maximum row count exceeded")
-        self.output = output
-
-
 @dataclass
 class Wrapper:
     width: int
-    max_rows: int
     hyphenator: Hyphenator
 
     def __post_init__(self) -> None:
         if self.width < 2:
             raise ValueError("width must be at least 2")
-        if self.max_rows < 1:
-            raise ValueError("max_rows must be at least 1")
         self._rows: list[str] = []
         self._carry = " "
         self._line = self._carry
@@ -53,8 +44,6 @@ class Wrapper:
         return "\n".join(self._rows)
 
     def _flush(self) -> None:
-        if len(self._rows) >= self.max_rows:
-            raise TextTooLongError("\n".join(self._rows))
         self._rows.append(self._line.rstrip(" ") or self._carry)
         self._line = self._carry
 
@@ -110,8 +99,8 @@ class Token:
     value: str
 
 
-def wrap_text(text: str, width: int, max_rows: int, hyphenator: Hyphenator) -> str:
-    return Wrapper(width=width, max_rows=max_rows, hyphenator=hyphenator).wrap(text)
+def wrap_text(text: str, width: int, hyphenator: Hyphenator) -> str:
+    return Wrapper(width=width, hyphenator=hyphenator).wrap(text)
 
 
 def is_c0_control(char: str) -> bool:
