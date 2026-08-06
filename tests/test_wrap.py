@@ -1,4 +1,4 @@
-from teletext_hyphenate.wrap import is_c0_control, wrap_text
+from teletext_hyphenate.wrap import is_c0_control, wrap_rows, wrap_text
 
 
 class FakeHyphenator:
@@ -14,6 +14,12 @@ def test_wraps_with_space_in_first_column_before_controls():
 
     assert result.splitlines() == [" hei", " maailma"]
     assert all(len(row) <= 8 for row in result.splitlines())
+
+
+def test_wrap_rows_returns_rows_without_joining():
+    result = wrap_rows("hei maailma", width=8, hyphenator=FakeHyphenator())
+
+    assert result == [" hei", " maailma"]
 
 
 def test_uses_hyphenation_point_when_word_does_not_fit():

@@ -29,7 +29,7 @@ class Wrapper:
     def _remaining(self) -> int:
         return self.width - len(self._line)
 
-    def wrap(self, text: str) -> str:
+    def wrap(self, text: str) -> list[str]:
         for token in _tokenize(text):
             kind, value = token.kind, token.value
             if kind == "newline":
@@ -41,7 +41,7 @@ class Wrapper:
             else:
                 self._add_word(value)
         self._flush()
-        return "\n".join(self._rows)
+        return self._rows
 
     def _flush(self) -> None:
         self._rows.append(self._line.rstrip(" ") or self._carry)
@@ -99,8 +99,12 @@ class Token:
     value: str
 
 
-def wrap_text(text: str, width: int, hyphenator: Hyphenator) -> str:
+def wrap_rows(text: str, width: int, hyphenator: Hyphenator) -> list[str]:
     return Wrapper(width=width, hyphenator=hyphenator).wrap(text)
+
+
+def wrap_text(text: str, width: int, hyphenator: Hyphenator) -> str:
+    return "\n".join(wrap_rows(text, width, hyphenator))
 
 
 def is_c0_control(char: str) -> bool:
