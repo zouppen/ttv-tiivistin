@@ -1,4 +1,4 @@
-Lue teksti antamastani tiedostosta tiedostosta examples/tiedote.pdf
+Lue teksti tiedostosta examples/tiedote.pdf
 ja tee siitä tekstimuotoinen tiivistelmä. Keksi otsikko, jonka jälkeen
 kaksi rivinvaihtoa. Merkkaa kappalevaihdot kahdella
 rivinvaihdolla. Tilaa ei ole paljon, eli sopiva kappaleiden määrä on
