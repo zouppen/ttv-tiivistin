@@ -56,3 +56,13 @@ Exit codes:
 - `2`: command-line usage error
 - `3`: Voikko is unavailable or no Finnish dictionary can be opened
 - `4`: text cannot be encoded in the selected teletext output character set
+
+## Automatic summaries
+
+See the [prompt.txt](prompt.txt), place the input file accordingly and run in a container:
+
+```
+codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox - <prompt.txt
+```
+
+And enjoy this fully automated teletext page generator from any PDF input.

@@ -1,0 +1,25 @@
+Lue teksti antamastani tiedostosta tiedostosta examples/tiedote.pdf
+ja tee siitä tekstimuotoinen tiivistelmä. Keksi otsikko, jonka jälkeen
+kaksi rivinvaihtoa. Merkkaa kappalevaihdot kahdella
+rivinvaihdolla. Tilaa ei ole paljon, eli sopiva kappaleiden määrä on
+3-4. Laadi tiivistelmä tiedostoon `summary.txt` ja suorita seuraava
+komento:
+
+```
+./.venv/bin/teletext-hyphenate -v --format ep1 -i summary.txt -o summary.ep1
+```
+
+Tiivistelmä on sopivan mittainen, kun komento tulostaa
+`teletext-hyphenate: rows=20`. Tämä tarkoittaa että lopullinen,
+muotoiltu pituus on 20 riviä. Ei haittaa, jos tiivistelmän pituus on
+tätä lyhyempi, mutta pidempi se ei saa olla.
+
+Käytössä on suppea suomalainen teletext-merkistö. Mikäli sovellus
+ilmoittaa, että jokin merkki ei kelpaa, kierrä rajoite. Esimerkiksi
+sähköpostiosoitteen "@"-merkin voi korvata merkinnällä "(a)".
+
+Kun sopiva mitta on saavutettu, voit lisätä siihen muotoiluja siten,
+että lisää ohjausmerkki sanan molemmille puolille. Jos tekstissä
+esiintyy henkilön nimi, käytä syaania väriä, merkki U+0006. Merkitse
+erityisen tärkeät asiat keltaisella värillä, merkki U+0003. Muotoilun
+loppuun laita valkoinen väri, merkki U+0007. Älä muotoile otsikkoa.
