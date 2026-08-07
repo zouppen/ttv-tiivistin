@@ -213,3 +213,18 @@ def test_cli_ep1_trailing_spaces_fixture_matches_fix(tmp_path):
 
     rows = [actual[6 + index * 40 : 6 + (index + 1) * 40] for index in range(25)]
     assert b"tajalaitteet.\x06Spurdo Sp{rde\x07ja\x06Mauno A-" in rows[22]
+
+
+def test_cli_ep1_middle_control_matches_among_space_fixture(tmp_path):
+    try:
+        import libvoikko  # noqa: F401
+    except Exception:
+        pytest.skip("libvoikko is not available")
+
+    middle_output = tmp_path / "middle.ep1"
+    among_space_output = tmp_path / "among-space.ep1"
+
+    assert cli.main(["--format", "ep1", "-i", "examples/input-middle.txt", "-o", str(middle_output)]) == 0
+    assert cli.main(["--format", "ep1", "-i", "examples/input-among-space.txt", "-o", str(among_space_output)]) == 0
+
+    assert middle_output.read_bytes() == among_space_output.read_bytes()

@@ -141,6 +141,7 @@ def _tokenize(text: str) -> list[Token]:
 
 
 def _normalize_tokens(tokens: list[Token]) -> list[Token]:
+    tokens = _move_controls_to_space_boundary(tokens)
     normalized: list[Token] = []
     for index, token in enumerate(tokens):
         if token.kind == "space" and (
@@ -154,3 +155,23 @@ def _normalize_tokens(tokens: list[Token]) -> list[Token]:
 
 def _is_control_token(token: Token | None) -> bool:
     return token is not None and token.kind == "control"
+
+
+def _is_punctuation_token(token: Token) -> bool:
+    return not any(char.isalnum() for char in token.value)
+
+
+def _move_controls_to_space_boundary(tokens: list[Token]) -> list[Token]:
+    moved: list[Token] = []
+    pending_controls: list[Token] = []
+    for token in tokens:
+        if token.kind == "control":
+            pending_controls.append(token)
+        elif pending_controls and token.kind == "word" and _is_punctuation_token(token):
+            moved.append(token)
+        else:
+            moved.extend(pending_controls)
+            pending_controls.clear()
+            moved.append(token)
+    moved.extend(pending_controls)
+    return moved

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from teletext_hyphenate.wrap import is_c0_control, wrap_rows, wrap_text
 
 
@@ -124,6 +126,39 @@ def test_space_across_newline_is_not_removed_by_control_normalization():
     result = wrap_text(f"sana \n{cyan} nimi", width=20, hyphenator=FakeHyphenator())
 
     assert result.splitlines() == [" sana", f" {cyan}nimi"]
+
+
+def test_control_before_punctuation_moves_after_punctuation():
+    white = "\x07"
+
+    result = wrap_text(f"sana{white}.", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" sana.{white}"]
+
+
+def test_control_moves_to_next_space_and_adjacent_space_is_removed():
+    white = "\x07"
+
+    result = wrap_text(f"sana{white}, jatko", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" sana,{white}jatko"]
+
+
+def test_control_does_not_move_across_newline():
+    white = "\x07"
+
+    result = wrap_text(f"sana{white}\n.jatko", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" sana{white}", f"{white}.jatko"]
+
+
+def test_middle_control_example_matches_among_space_example():
+    middle = Path("examples/input-middle.txt").read_text(encoding="utf-8")
+    among_space = Path("examples/input-among-space.txt").read_text(encoding="utf-8")
+
+    assert wrap_text(middle, width=40, hyphenator=FakeHyphenator()) == wrap_text(
+        among_space, width=40, hyphenator=FakeHyphenator()
+    )
 
 
 def test_control_at_full_row_moves_to_next_row_and_then_carries():
