@@ -195,3 +195,21 @@ def test_cli_ep1_multicolor_fixture_matches_manual_fix(tmp_path):
     assert rows[7].startswith(b"\x06SRAL:n")
     assert rows[12].startswith(b"\x07radioamat")
     assert b"hommat" in rows[12]
+
+
+def test_cli_ep1_trailing_spaces_fixture_matches_fix(tmp_path):
+    try:
+        import libvoikko  # noqa: F401
+    except Exception:
+        pytest.skip("libvoikko is not available")
+
+    output_path = tmp_path / "output.ep1"
+
+    assert cli.main(["--format", "ep1", "-i", "examples/trailing-spaces.txt", "-o", str(output_path)]) == 0
+
+    expected = Path("examples/trailing-spaces-fix.ep1").read_bytes()
+    actual = output_path.read_bytes()
+    assert actual == expected
+
+    rows = [actual[6 + index * 40 : 6 + (index + 1) * 40] for index in range(25)]
+    assert b"tajalaitteet.\x06Spurdo Sp{rde\x07ja\x06Mauno A-" in rows[22]

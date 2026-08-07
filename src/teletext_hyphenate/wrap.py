@@ -30,7 +30,7 @@ class Wrapper:
         return self.width - len(self._line)
 
     def wrap(self, text: str) -> list[str]:
-        for token in _tokenize(text):
+        for token in _normalize_tokens(_tokenize(text)):
             kind, value = token.kind, token.value
             if kind == "newline":
                 self._flush()
@@ -138,3 +138,19 @@ def _tokenize(text: str) -> list[Token]:
             current.append(char)
     flush_word()
     return tokens
+
+
+def _normalize_tokens(tokens: list[Token]) -> list[Token]:
+    normalized: list[Token] = []
+    for index, token in enumerate(tokens):
+        if token.kind == "space" and (
+            _is_control_token(tokens[index - 1] if index > 0 else None)
+            or _is_control_token(tokens[index + 1] if index + 1 < len(tokens) else None)
+        ):
+            continue
+        normalized.append(token)
+    return normalized
+
+
+def _is_control_token(token: Token | None) -> bool:
+    return token is not None and token.kind == "control"

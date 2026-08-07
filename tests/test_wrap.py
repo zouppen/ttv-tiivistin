@@ -94,6 +94,38 @@ def test_controls_separated_by_text_are_preserved():
     assert result.splitlines() == [f" {blue}tai{white}radio"]
 
 
+def test_space_before_control_is_removed():
+    cyan = "\x06"
+
+    result = wrap_text(f"sana {cyan}nimi", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" sana{cyan}nimi"]
+
+
+def test_space_after_control_is_removed():
+    cyan = "\x06"
+
+    result = wrap_text(f"{cyan} nimi", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" {cyan}nimi"]
+
+
+def test_spaces_around_control_are_removed():
+    cyan = "\x06"
+
+    result = wrap_text(f"sana {cyan} nimi", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [f" sana{cyan}nimi"]
+
+
+def test_space_across_newline_is_not_removed_by_control_normalization():
+    cyan = "\x06"
+
+    result = wrap_text(f"sana \n{cyan} nimi", width=20, hyphenator=FakeHyphenator())
+
+    assert result.splitlines() == [" sana", f" {cyan}nimi"]
+
+
 def test_control_at_full_row_moves_to_next_row_and_then_carries():
     red = "\x01"
 
